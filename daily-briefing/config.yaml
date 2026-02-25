@@ -1,0 +1,52 @@
+# Daily Briefing Configuration
+# Copy to config.local.yaml for personal customizations (gitignored)
+
+# ===== Reddit Settings =====
+reddit:
+  subreddits:
+    - name: all
+      sort: top       # top, hot, new, rising
+      time: day       # hour, day, week, month, year, all
+      limit: 10
+    - name: technology
+      sort: top
+      time: day
+      limit: 5
+
+  # Content filtering (all implemented)
+  filters:
+    nsfw: false
+    min_score: 100
+    min_comments: 10
+    max_age_hours: 24
+
+  # Exclude posts containing these keywords
+  blocklist:
+    - "onlyfans"
+    - "crypto scam"
+
+# ===== News RSS Feeds =====
+news:
+  feeds:
+    - name: "Google News"
+      url: "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
+      limit: 10
+      enabled: true
+    - name: "BBC World"
+      url: "http://feeds.bbci.co.uk/news/world/rss.xml"
+      limit: 5
+      enabled: true
+    - name: "Hacker News"
+      url: "https://hnrss.org/frontpage"
+      limit: 5
+      enabled: true
+
+# ===== Cache =====
+cache:
+  enabled: true
+  directory: "/tmp/daily-briefing-cache"
+  ttl_seconds: 300
+
+# ===== Deduplication =====
+deduplication:
+  enabled: true

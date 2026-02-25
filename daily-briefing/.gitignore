@@ -1,0 +1,29 @@
+# Sample/test outputs
+sample-briefing.md
+briefing.md
+briefing.json
+briefing.html
+briefing.txt
+*-briefing-*.md
+
+# Local config overrides
+config.local.yaml
+
+# Cache directory
+.cache/
+
+# ClawHub CLI metadata
+.clawhub/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*~
+.vscode/
+.idea/

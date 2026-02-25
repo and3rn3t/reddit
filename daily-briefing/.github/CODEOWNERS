@@ -1,0 +1,23 @@
+# Code Owners
+
+# These users will be automatically requested for review on PRs
+
+# Default owner for everything
+
+* @andernet
+
+# Scripts require careful review
+
+/scripts/ @andernet
+
+# Config changes
+
+/config.yaml @andernet
+
+# CI/CD changes
+
+/.github/ @andernet
+
+# Skill definition
+
+/SKILL.md @andernet

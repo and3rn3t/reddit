@@ -1,0 +1,247 @@
+{
+  "skill_name": "daily-briefing",
+  "version": "1.1.0",
+  "description": "Evaluation cases for daily briefing skill",
+  "evals": [
+    {
+      "id": 1,
+      "category": "basic",
+      "prompt": "Give me my daily briefing",
+      "expected_output": "A markdown file saved as daily-briefing-YYYY-MM-DD.md with Reddit trending section (8-12 posts with subreddit, score, comments, links) and Top News section (8-12 headlines categorized by World, Tech, Business, Culture with source attributions and links). Concise bullet format. Chat summary with top 3-4 highlights.",
+      "expected_behavior": [
+        "Fetches Reddit JSON API first (reddit.com/r/all/top.json)",
+        "Fetches news via RSS or web search",
+        "Creates markdown file with proper structure",
+        "Shows brief in-chat summary"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "category": "customization",
+      "prompt": "What's trending on reddit and in the news today? Focus on tech and AI stuff especially.",
+      "expected_output": "Briefing with heavier emphasis on tech/AI content. Reddit section includes r/technology, r/MachineLearning, r/artificial, r/programming. News section weights Tech & Science category more heavily.",
+      "expected_behavior": [
+        "Adds tech subreddits to fetch list",
+        "Uses tech-specific news RSS or search queries",
+        "May reduce or skip non-tech categories"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "category": "trigger-recognition",
+      "prompt": "Catch me up on what I missed — anything interesting happening in the world?",
+      "expected_output": "Standard briefing format with Reddit + News sections, links, and sources. Casual trigger phrase should still invoke full skill.",
+      "expected_behavior": [
+        "Recognizes casual phrasing as skill trigger",
+        "Produces same quality output as explicit trigger"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "category": "partial-content",
+      "prompt": "Just give me reddit trending, skip the news",
+      "expected_output": "Reddit-only briefing with 10-15 trending posts. No news section. Still includes subreddit, scores, comments, and links for each post.",
+      "expected_behavior": [
+        "Omits news section entirely",
+        "Fetches only Reddit JSON API",
+        "May fetch additional Reddit endpoints for more content"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "category": "filtering",
+      "prompt": "Morning update please, but skip sports and entertainment",
+      "expected_output": "Full briefing but with Sports and Culture & Entertainment news categories omitted. Reddit section unchanged.",
+      "expected_behavior": [
+        "Filters out sports/entertainment from news",
+        "Other categories remain complete"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "category": "specific-subreddits",
+      "prompt": "What's happening on r/programming, r/golang, and r/rust today?",
+      "expected_output": "Reddit section focused only on specified subreddits. Uses combined subreddit JSON endpoint. May include or omit news section based on interpretation.",
+      "expected_behavior": [
+        "Fetches: reddit.com/r/programming+golang+rust/top.json",
+        "Only shows posts from requested subreddits"
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "category": "trigger-recognition",
+      "prompt": "Top stories today",
+      "expected_output": "Standard daily briefing with both Reddit and News sections. Minimal phrase should still trigger full skill.",
+      "expected_behavior": [
+        "Recognizes 'top stories' as trigger",
+        "Full briefing output"
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "category": "filtering",
+      "prompt": "News digest for today, business and tech only",
+      "expected_output": "News-focused briefing with only Business & Economy and Tech & Science categories. Reddit section may be included or omitted.",
+      "expected_behavior": [
+        "Filters news to requested categories",
+        "May use category-specific RSS feeds"
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "category": "error-handling",
+      "prompt": "Give me a daily briefing",
+      "setup": "Simulate Reddit API being rate-limited or unavailable",
+      "expected_output": "Briefing still generated with news section intact. Reddit section shows graceful fallback message like 'Reddit data temporarily unavailable'.",
+      "expected_behavior": [
+        "Catches Reddit API failure gracefully",
+        "Continues with available data sources",
+        "Does not fail completely",
+        "Logs warning about partial data"
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "category": "error-handling",
+      "prompt": "Daily briefing please",
+      "setup": "Simulate all RSS feeds being unavailable",
+      "expected_output": "Briefing still generated with Reddit section intact. News section shows graceful fallback message.",
+      "expected_behavior": [
+        "Catches RSS failures gracefully",
+        "Continues with Reddit data",
+        "Does not fail completely"
+      ],
+      "files": []
+    },
+    {
+      "id": 11,
+      "category": "edge-case",
+      "prompt": "Briefing for r/nonexistentsubreddit12345",
+      "expected_output": "Graceful handling of non-existent subreddit. Either shows empty results with explanation or falls back to default subreddits.",
+      "expected_behavior": [
+        "Handles 404/empty response from Reddit",
+        "Does not crash",
+        "Provides helpful message"
+      ],
+      "files": []
+    },
+    {
+      "id": 12,
+      "category": "edge-case",
+      "prompt": "Daily briefing",
+      "setup": "Run at midnight UTC when 'today' might be ambiguous",
+      "expected_output": "Briefing shows correct date. Time-based filtering uses consistent UTC timezone.",
+      "expected_behavior": [
+        "Uses UTC for all timestamps",
+        "Date in filename matches header"
+      ],
+      "files": []
+    },
+    {
+      "id": 13,
+      "category": "output-format",
+      "prompt": "Daily briefing in JSON format",
+      "expected_output": "Valid JSON output with reddit and news arrays. Machine-readable format suitable for downstream processing.",
+      "expected_behavior": [
+        "Outputs valid JSON",
+        "Includes metadata (timestamp, date)",
+        "Reddit items have: title, score, subreddit, permalink",
+        "News items have: title, link, source"
+      ],
+      "files": []
+    },
+    {
+      "id": 14,
+      "category": "output-format",
+      "prompt": "Generate an HTML briefing",
+      "expected_output": "Well-formatted HTML document with styled tables and lists. Viewable in browser.",
+      "expected_behavior": [
+        "Valid HTML5 structure",
+        "Includes basic CSS styling",
+        "Links are clickable"
+      ],
+      "files": []
+    },
+    {
+      "id": 15,
+      "category": "filtering",
+      "prompt": "Briefing but filter out NSFW content",
+      "expected_output": "All Reddit posts with over_18=true are excluded. News section unaffected.",
+      "expected_behavior": [
+        "Checks over_18 field in Reddit JSON",
+        "Filters before display"
+      ],
+      "files": []
+    },
+    {
+      "id": 16,
+      "category": "deduplication",
+      "prompt": "Daily briefing",
+      "setup": "Same story appears in both Reddit and news",
+      "expected_output": "Duplicate stories are not shown twice. Either appears in Reddit OR news, not both.",
+      "expected_behavior": [
+        "Detects similar/duplicate titles",
+        "Shows each story once",
+        "Prefers Reddit version (configurable)"
+      ],
+      "files": []
+    },
+    {
+      "id": 17,
+      "category": "caching",
+      "prompt": "Daily briefing",
+      "setup": "Run twice within 5 minutes",
+      "expected_output": "Second run uses cached data. Faster execution. Same content unless cache expired.",
+      "expected_behavior": [
+        "First run fetches and caches",
+        "Second run uses cache",
+        "Cache respects TTL"
+      ],
+      "files": []
+    },
+    {
+      "id": 18,
+      "category": "time-filtering",
+      "prompt": "Briefing from the last 6 hours only",
+      "expected_output": "Only content posted within last 6 hours. Uses created_utc/pubDate for filtering.",
+      "expected_behavior": [
+        "Checks timestamp on each item",
+        "Filters based on requested time window",
+        "May have fewer results than normal"
+      ],
+      "files": []
+    },
+    {
+      "id": 19,
+      "category": "multiple-sources",
+      "prompt": "Briefing with BBC and NPR news",
+      "expected_output": "News section includes items from both BBC and NPR RSS feeds. Source attribution shows which feed each item came from.",
+      "expected_behavior": [
+        "Fetches multiple RSS feeds",
+        "Combines results",
+        "Shows source for each item"
+      ],
+      "files": []
+    },
+    {
+      "id": 20,
+      "category": "negative",
+      "prompt": "What's the weather today?",
+      "expected_output": "Should NOT trigger daily briefing skill. Weather is not related to news/reddit briefing.",
+      "expected_behavior": [
+        "Skill is not invoked",
+        "Normal response about weather (or redirect to weather skill)"
+      ],
+      "files": []
+    }
+  ]
+}

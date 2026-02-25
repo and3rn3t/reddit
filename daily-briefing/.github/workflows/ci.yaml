@@ -1,0 +1,187 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  schedule:
+    # Run daily at 6 AM UTC to validate feeds are still working
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+      
+      - name: Lint shell scripts
+        run: |
+          find scripts -name "*.sh" -exec shellcheck -x {} \;
+      
+      - name: Check YAML syntax
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('config.yaml'))"
+
+  validate-feeds:
+    name: Validate Data Sources
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y jq curl
+      
+      - name: Test Reddit API
+        run: |
+          response=$(curl -s -A "daily-briefing-ci/1.0" --max-time 30 \
+            "https://www.reddit.com/r/all/top.json?t=day&limit=1")
+          
+          if echo "$response" | jq -e '.data.children[0]' > /dev/null 2>&1; then
+            echo "✓ Reddit API responding"
+            echo "$response" | jq '.data.children[0].data | {title, score, subreddit}'
+          else
+            echo "✗ Reddit API failed"
+            exit 1
+          fi
+      
+      - name: Test Google News RSS
+        run: |
+          response=$(curl -s --max-time 30 \
+            "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en")
+          
+          if echo "$response" | grep -q '<item>'; then
+            item_count=$(echo "$response" | grep -c '<item>')
+            echo "✓ Google News RSS responding ($item_count items)"
+          else
+            echo "✗ Google News RSS failed"
+            exit 1
+          fi
+      
+      - name: Test BBC RSS
+        run: |
+          response=$(curl -s --max-time 30 \
+            "http://feeds.bbci.co.uk/news/world/rss.xml")
+          
+          if echo "$response" | grep -q '<item>'; then
+            echo "✓ BBC RSS responding"
+          else
+            echo "⚠ BBC RSS not available (non-blocking)"
+          fi
+        continue-on-error: true
+
+  test-scripts:
+    name: Test Script Execution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y jq curl
+          pip install yq
+      
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+      
+      - name: Test lib.sh sourcing
+        run: |
+          source scripts/lib.sh
+          echo "✓ lib.sh loads successfully"
+          log_info "Test log message"
+      
+      - name: Test config.sh sourcing
+        run: |
+          source scripts/config.sh
+          echo "✓ config.sh loads successfully"
+          echo "Config file: $CONFIG_FILE"
+      
+      - name: Test validate-feeds.sh
+        run: |
+          ./scripts/validate-feeds.sh || echo "Some feeds failed (expected)"
+      
+      - name: Test generate-sample.sh
+        run: |
+          ./scripts/generate-sample.sh /tmp/test-briefing.md
+          if [[ -f /tmp/test-briefing.md ]]; then
+            echo "✓ Briefing generated"
+            head -30 /tmp/test-briefing.md
+          else
+            echo "✗ Briefing not generated"
+            exit 1
+          fi
+
+  test-evals:
+    name: Validate Evals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install jq
+        run: sudo apt-get install -y jq
+      
+      - name: Validate evals.json syntax
+        run: |
+          if jq -e '.' evals/evals.json > /dev/null 2>&1; then
+            echo "✓ evals.json is valid JSON"
+            eval_count=$(jq '.evals | length' evals/evals.json)
+            echo "  Found $eval_count evaluation cases"
+          else
+            echo "✗ evals.json has invalid JSON"
+            exit 1
+          fi
+      
+      - name: Check eval structure
+        run: |
+          jq -e '.evals[] | select(.input and .expected)' evals/evals.json > /dev/null
+          echo "✓ All evals have required fields"
+
+  validate-skill:
+    name: Validate SKILL.md
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: pip install pyyaml
+      
+      - name: Extract and validate frontmatter
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+          
+          with open('SKILL.md', 'r') as f:
+              content = f.read()
+          
+          if not content.startswith('---'):
+              print("✗ Missing YAML frontmatter")
+              sys.exit(1)
+          
+          parts = content.split('---', 2)
+          if len(parts) < 3:
+              print("✗ Invalid frontmatter format")
+              sys.exit(1)
+          
+          try:
+              fm = yaml.safe_load(parts[1])
+          except yaml.YAMLError as e:
+              print(f"✗ Invalid YAML: {e}")
+              sys.exit(1)
+          
+          required = ['name', 'version', 'description']
+          missing = [k for k in required if k not in fm]
+          if missing:
+              print(f"✗ Missing required fields: {missing}")
+              sys.exit(1)
+          
+          print("✓ SKILL.md frontmatter is valid")
+          print(f"  Name: {fm['name']}")
+          print(f"  Version: {fm['version']}")
+          EOF

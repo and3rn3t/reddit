@@ -1,0 +1,21 @@
+# Ignore sample/test outputs
+
+sample-briefing.md
+*-briefing-*.md
+/tmp/
+
+# Ignore local CLI metadata
+
+.clawhub/
+
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# Editor files
+
+*.swp
+*~
+.vscode/
+.idea/

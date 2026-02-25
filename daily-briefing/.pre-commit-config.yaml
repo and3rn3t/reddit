@@ -1,0 +1,67 @@
+# Pre-commit hooks for daily-briefing skill
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  # Shell script linting
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.9.0
+    hooks:
+      - id: shellcheck
+        args: ["-x"]  # Follow source statements
+        files: \.sh$
+
+  # YAML validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        files: \.(yaml|yml)$
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-json
+        files: \.json$
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: ["--disable", "MD013", "MD033", "MD041", "--"]
+        files: \.(md|markdown)$
+
+  # Local hooks
+  - repo: local
+    hooks:
+      - id: validate-evals
+        name: Validate evals.json
+        entry: bash -c 'jq -e "." evals/evals.json > /dev/null'
+        language: system
+        files: evals/evals\.json$
+        pass_filenames: false
+
+      - id: validate-config
+        name: Validate config.yaml
+        entry: bash -c 'python3 -c "import yaml; yaml.safe_load(open(\"config.yaml\"))"'
+        language: system
+        files: config\.yaml$
+        pass_filenames: false
+
+      - id: validate-skill-frontmatter
+        name: Validate SKILL.md frontmatter
+        entry: bash -c '
+          python3 << EOF
+          import yaml
+          with open("SKILL.md") as f:
+              content = f.read()
+          if not content.startswith("---"):
+              exit(1)
+          parts = content.split("---", 2)
+          yaml.safe_load(parts[1])
+          EOF
+        '
+        language: system
+        files: SKILL\.md$
+        pass_filenames: false
